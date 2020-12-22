@@ -24,7 +24,9 @@ describe('Quotes endpoints', () => {
   describe('GET /quotes', () => {
     context(`Given no quotes`, () => {
       it(`responds with 200 and an empty list`, () => {
-        return supertest(app).get('/quotes').expect(200, []);
+        return supertest(app)
+          .get('/quotes')
+          .expect(200, []);
       });
     });
 
@@ -32,56 +34,54 @@ describe('Quotes endpoints', () => {
       const testQuotes = makeQuotesArray();
 
       beforeEach('insert quotes', () => {
-        return db.into('favorite_quotes').insert(testQuotes);
+        return db
+          .into('favorite_quotes')
+          .insert(testQuotes);
       });
 
       it('GET /quotes responds with 200 and all quotes', () => {
-        return supertest(app).get('/quotes').expect(200, testQuotes);
+        return supertest(app)
+          .get('/quotes')
+          .expect(200, testQuotes);
       });
     });
 
-    context(`Given an XSS attack article`, () => {
-      const maliciousQuote = makeMaliciousQuote();
+    // context(`Given an XSS attack article`, () => {
+    //   const maliciousQuote = makeMaliciousQuote();
       
-      beforeEach('insert malicious article', () => {
-        return db
-          .into('favorite_quotes')
-          .insert([ maliciousQuote ]);
-      });
+    //   beforeEach('insert malicious article', () => {
+    //     return db
+    //       .into('favorite_quotes')
+    //       .insert([ maliciousQuote ]);
+    //   });
       
-      it('removes XSS attack content', () => {
-        return supertest(app)
-          .get(`/quotes`)
-          .expect(200)
-          .expect(res => {
-            expect(res.body[0].title).to.eql('Naughty naughty very naughty &lt;script&gt;alert(\'xss\');&lt;/script&gt;');
-            expect(res.body[0].content).to.eql(`Bad image <img src='https://url.to.file.which/does-not.exist'>. But not <strong>all</strong> bad.`);
-          });
-      });
-    });
+    //   it('removes XSS attack content', () => {
+    //     return supertest(app)
+    //       .get(`/quotes`)
+    //       .expect(200)
+    //       .expect(res => {
+    //         expect(res.body[0].title).to.eql('Naughty naughty very naughty &lt;script&gt;alert(\'xss\');&lt;/script&gt;');
+    //         expect(res.body[0].content).to.eql(`Bad image <img src='https://url.to.file.which/does-not.exist'>. But not <strong>all</strong> bad.`);
+    //       });
+    //   });
+    // });
   });
 
   describe('POST /quotes', () => {
-    it('creates an quote, responds with 201 and the new quote', function() {
+    it('creates a quote, responds with 201, and the new quote', function() {
       this.retries(3);
-      const newArticle = {
-        title: 'Test new article',
-        style: 'Listicle',
-        content: 'Test new article content...'
-      };
+      const newQuote = makeQuotesArray(1)[0];
       return supertest(app)
         .post('/quotes')
-        .send(newArticle)
+        .send(newQuote)
         .expect(201)
         .expect((res) => {
-          expect(res.body.title).to.eql(newArticle.title);
-          expect(res.body.style).to.eql(newArticle.style);
-          expect(res.body.content).to.eql(newArticle.content);
+          expect(res.body.content).to.eql(newQuote.content);
+          expect(res.body.attribution).to.eql(newQuote.attribution);
+          expect(res.body.source).to.eql(newQuote.source);
+          expect(res.body.tags).to.eql(newQuote.tags);
           expect(res.body).to.have.property('id');
           expect(res.headers.location).to.eql(`/quotes/${res.body.id}`);
-          const expected = new Date().toLocaleDateString();
-          const actual = new Date(res.body.date_published).toLocaleDateString();
-          expect(actual).to.eql(expected);
         })
         .then((postRes) =>
           supertest(app)
@@ -90,22 +90,21 @@ describe('Quotes endpoints', () => {
         );
     });
 
-    const fields = ['title', 'style', 'content'];
-    fields.forEach(field => {
-      const newArticle = {
-        title: 'Test new article',
-        style: 'Listicle',
-        content: 'Test new article content...'
-      };
+    const requiredFields = ['title', 'style', 'content'];
+    requiredFields.forEach(field => {
+      const newQuote = makeQuotesArray(1)[0];
+
       it(`responds with 400 and an error message when ${field} field is missing`, () => {
-        delete newArticle[field];
+        delete newQuote[field];
         return supertest(app)
           .post('/quotes')
-          .send(newArticle)
+          .send(newQuote)
           .expect(400, {
             error: {message: `Missing ${field} in request body`}
           });
       });
+
+      
     });
 
     context(`When an XSS attack article is put in, article is sanitized right away`, () => {
@@ -122,9 +121,11 @@ describe('Quotes endpoints', () => {
           });
       });
     });
+
+   
   });
 
-  describe('GET /quotes/:id', () => {
+  describe('GET /quotes/:quote_id', () => {
     context(`Given no quotes`, () => {
       it(`responds with 404`, () => {
         const quoteId = 123456;
@@ -138,10 +139,12 @@ describe('Quotes endpoints', () => {
       const testQuotes = makeQuotesArray();
 
       beforeEach('insert quotes', () => {
-        return db.into('favorite_quotes').insert(testQuotes);
+        return db
+          .into('favorite_quotes')
+          .insert(testQuotes);
       });
 
-      it('GET /quotes/:id responds with 200 and the specified article', () => {
+      it('GET /quotes/:id responds with 200 and the specified quote', () => {
         const quoteId = 3;
         const expected = testQuotes[quoteId - 1];
         return supertest(app)
@@ -150,28 +153,29 @@ describe('Quotes endpoints', () => {
       });
     });
 
-    context(`Given an XSS attack article`, () => {
-      const maliciousQuote = makeMaliciousQuote();
+  //   context(`Given an XSS attack quote`, () => {
+  //     const maliciousQuote = makeMaliciousQuote();
       
-      beforeEach('insert malicious article', () => {
-        return db
-          .into('favorite_quotes')
-          .insert([ maliciousQuote ]);
-      });
+  //     beforeEach('insert malicious article', () => {
+  //       return db
+  //         .into('favorite_quotes')
+  //         .insert([ maliciousQuote ]);
+  //     });
       
-      it('removes XSS attack content', () => {
-        return supertest(app)
-          .get(`/quotes/${maliciousQuote.id}`)
-          .expect(200)
-          .expect(res => {
-            expect(res.body.title).to.eql('Naughty naughty very naughty &lt;script&gt;alert(\'xss\');&lt;/script&gt;');
-            expect(res.body.content).to.eql(`Bad image <img src='https://url.to.file.which/does-not.exist'>. But not <strong>all</strong> bad.`);
-          });
-      });
-    });
+  //     it('removes XSS attack content', () => {
+  //       return supertest(app)
+  //         .get(`/quotes/${maliciousQuote.id}`)
+  //         .expect(200)
+  //         .expect(res => {
+  //           expect(res.body.title).to.eql('Naughty naughty very naughty &lt;script&gt;alert(\'xss\');&lt;/script&gt;');
+  //           expect(res.body.content).to.eql(`Bad image <img src='https://url.to.file.which/does-not.exist'>. But not <strong>all</strong> bad.`);
+  //         });
+  //     });
+  //   });
+  // });
   });
 
-  describe.only(`DELETE /quotes/:quote_id`, () => {
+  describe(`DELETE /quotes/:quote_id`, () => {
     context(`Given no quotes`, () => {
       it(`responds with 404`, () => {
         const quoteId = 123456;
@@ -204,4 +208,5 @@ describe('Quotes endpoints', () => {
       });
     });
   });
+
 });

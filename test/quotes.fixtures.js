@@ -1,7 +1,6 @@
 const faker = require('faker');
 
 const makeQuotesArray = (num = 4) => {
-  console.log('num:', num)
   let quoteArray = []
 
   for(let i = 0; i < num; i++){
@@ -18,6 +17,8 @@ const makeQuotesArray = (num = 4) => {
   return quoteArray
   
 }
+
+console.log(makeQuotesArray(1))
 
 const makeMaliciousQuote = () => {
   // code here
