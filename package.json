@@ -1,0 +1,48 @@
+{
+  "name": "knex-postgres-boilerplate",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "private": "true",
+  "scripts": {
+    "test": "mocha --require test/setup.js --exit",
+    "watch": "npm t -- --watch",
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "migrate": "postgrator --config postgrator-config.js",
+    "migrate:test": "env NODE_ENV=test npm run migrate",
+    "migrate:production": "heroku run npm run migrate",
+    "predeploy": "npm audit",
+    "deploy": "git push heroku main",
+    "postdeploy": "npm run migrate:production"
+  },
+  "keywords": [],
+  "engine": {
+    "node": "12.14.0"
+  },
+  "author": "Justin 'ZenMnky' Hager",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "helmet": "^4.2.0",
+    "knex": "^0.21.12",
+    "morgan": "^1.10.0",
+    "pg": "^7.18.2",
+    "xss": "^1.0.8",
+    "winston": "^3.3.3",
+    "postgrator-cli": "^3.2.0"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "eslint": "^7.14.0",
+    "eslint-config-prettier": "^6.15.0",
+    "faker": "^5.1.0",
+    "mocha": "^8.2.1",
+    "nodemon": "^2.0.6",
+    "prettier": "2.2.1",
+    "supertest": "^6.0.1",
+    "nvm": "0.0.4"
+  }
+}
