@@ -20,7 +20,7 @@ quotesRouter
       .then(quotes => res.json(quotes.map(sanitizeQuote)))
       .catch(next);
   })
-  .post((req, res, next) => {
+  .post(bodyParser, (req, res, next) => {
     const { content, attribution, source, tags } = req.body;
     
     let reqFields = { content }

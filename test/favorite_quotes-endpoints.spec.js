@@ -1,42 +1,42 @@
-const { expect } = require("chai");
-const knex = require("knex");
-const supertest = require("supertest");
-const app = require("../src/app");
-// const { makeQuotesArray, makeMaliciousQuote } = require("./quotes.fixtures");
+const { expect } = require('chai');
+const knex = require('knex');
+const supertest = require('supertest');
+const app = require('../src/app');
+const { makeQuotesArray, makeMaliciousQuote } = require('./quotes.fixtures');
 
-describe("Article endpoints", () => {
+describe('Quotes endpoints', () => {
   let db;
 
-  before("make knex instance", () => {
+  before('make knex instance', () => {
     db = knex({
-      client: "pg",
+      client: 'pg',
       connection: process.env.TEST_DATABASE_URL
     });
-    app.set("db", db);
+    app.set('db', db);
   });
 
-  before("clean the table", () => db("favorite_quotes").truncate());
+  before('clean the table', () => db('favorite_quotes').truncate());
 
-  after("disconnect from db", () => db.destroy());
+  after('disconnect from db', () => db.destroy());
 
-  afterEach("cleanup", () => db("favorite_quotes").truncate());
+  afterEach('cleanup', () => db('favorite_quotes').truncate());
 
-  describe("GET /quotes", () => {
+  describe('GET /quotes', () => {
     context(`Given no quotes`, () => {
       it(`responds with 200 and an empty list`, () => {
-        return supertest(app).get("/quotes").expect(200, []);
+        return supertest(app).get('/quotes').expect(200, []);
       });
     });
 
-    context("Given there are quotes in the database", () => {
+    context('Given there are quotes in the database', () => {
       const testQuotes = makeQuotesArray();
 
-      beforeEach("insert quotes", () => {
-        return db.into("favorite_quotes").insert(testQuotes);
+      beforeEach('insert quotes', () => {
+        return db.into('favorite_quotes').insert(testQuotes);
       });
 
-      it("GET /quotes responds with 200 and all quotes", () => {
-        return supertest(app).get("/quotes").expect(200, testQuotes);
+      it('GET /quotes responds with 200 and all quotes', () => {
+        return supertest(app).get('/quotes').expect(200, testQuotes);
       });
     });
 
@@ -54,30 +54,30 @@ describe("Article endpoints", () => {
           .get(`/quotes`)
           .expect(200)
           .expect(res => {
-            expect(res.body[0].title).to.eql('Naughty naughty very naughty &lt;script&gt;alert(\"xss\");&lt;/script&gt;');
-            expect(res.body[0].content).to.eql(`Bad image <img src="https://url.to.file.which/does-not.exist">. But not <strong>all</strong> bad.`);
+            expect(res.body[0].title).to.eql('Naughty naughty very naughty &lt;script&gt;alert(\'xss\');&lt;/script&gt;');
+            expect(res.body[0].content).to.eql(`Bad image <img src='https://url.to.file.which/does-not.exist'>. But not <strong>all</strong> bad.`);
           });
       });
     });
   });
 
-  describe("POST /quotes", () => {
-    it("creates an quote, responds with 201 and the new quote", function() {
+  describe('POST /quotes', () => {
+    it('creates an quote, responds with 201 and the new quote', function() {
       this.retries(3);
       const newArticle = {
-        title: "Test new article",
-        style: "Listicle",
-        content: "Test new article content..."
+        title: 'Test new article',
+        style: 'Listicle',
+        content: 'Test new article content...'
       };
       return supertest(app)
-        .post("/quotes")
+        .post('/quotes')
         .send(newArticle)
         .expect(201)
         .expect((res) => {
           expect(res.body.title).to.eql(newArticle.title);
           expect(res.body.style).to.eql(newArticle.style);
           expect(res.body.content).to.eql(newArticle.content);
-          expect(res.body).to.have.property("id");
+          expect(res.body).to.have.property('id');
           expect(res.headers.location).to.eql(`/quotes/${res.body.id}`);
           const expected = new Date().toLocaleDateString();
           const actual = new Date(res.body.date_published).toLocaleDateString();
@@ -93,9 +93,9 @@ describe("Article endpoints", () => {
     const fields = ['title', 'style', 'content'];
     fields.forEach(field => {
       const newArticle = {
-        title: "Test new article",
-        style: "Listicle",
-        content: "Test new article content..."
+        title: 'Test new article',
+        style: 'Listicle',
+        content: 'Test new article content...'
       };
       it(`responds with 400 and an error message when ${field} field is missing`, () => {
         delete newArticle[field];
@@ -117,14 +117,14 @@ describe("Article endpoints", () => {
           .send(maliciousQuote)
           .expect(201)
           .expect(res => {
-            expect(res.body.title).to.eql('Naughty naughty very naughty &lt;script&gt;alert(\"xss\");&lt;/script&gt;');
-            expect(res.body.content).to.eql(`Bad image <img src="https://url.to.file.which/does-not.exist">. But not <strong>all</strong> bad.`);
+            expect(res.body.title).to.eql('Naughty naughty very naughty &lt;script&gt;alert(\'xss\');&lt;/script&gt;');
+            expect(res.body.content).to.eql(`Bad image <img src='https://url.to.file.which/does-not.exist'>. But not <strong>all</strong> bad.`);
           });
       });
     });
   });
 
-  describe("GET /quotes/:id", () => {
+  describe('GET /quotes/:id', () => {
     context(`Given no quotes`, () => {
       it(`responds with 404`, () => {
         const quoteId = 123456;
@@ -134,14 +134,14 @@ describe("Article endpoints", () => {
       });
     });
 
-    context("Given there are quotes in the database", () => {
+    context('Given there are quotes in the database', () => {
       const testQuotes = makeQuotesArray();
 
-      beforeEach("insert quotes", () => {
-        return db.into("favorite_quotes").insert(testQuotes);
+      beforeEach('insert quotes', () => {
+        return db.into('favorite_quotes').insert(testQuotes);
       });
 
-      it("GET /quotes/:id responds with 200 and the specified article", () => {
+      it('GET /quotes/:id responds with 200 and the specified article', () => {
         const quoteId = 3;
         const expected = testQuotes[quoteId - 1];
         return supertest(app)
@@ -164,8 +164,8 @@ describe("Article endpoints", () => {
           .get(`/quotes/${maliciousQuote.id}`)
           .expect(200)
           .expect(res => {
-            expect(res.body.title).to.eql('Naughty naughty very naughty &lt;script&gt;alert(\"xss\");&lt;/script&gt;');
-            expect(res.body.content).to.eql(`Bad image <img src="https://url.to.file.which/does-not.exist">. But not <strong>all</strong> bad.`);
+            expect(res.body.title).to.eql('Naughty naughty very naughty &lt;script&gt;alert(\'xss\');&lt;/script&gt;');
+            expect(res.body.content).to.eql(`Bad image <img src='https://url.to.file.which/does-not.exist'>. But not <strong>all</strong> bad.`);
           });
       });
     });

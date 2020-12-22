@@ -4,6 +4,8 @@ const morgan = require('morgan');
 const cors = require('cors');
 const helmet = require('helmet');
 const { NODE_ENV } = require('./config');
+const validateBearerToken = require('./validate-bearer-token');
+const errorHandler = require('./error-handler');
 // const someRouter = require('./some-routers/some-router');
 
 const morganOption = NODE_ENV === 'production' ? 'tiny' : 'common';
@@ -19,18 +21,6 @@ app.use(express.json());
 app.get('/', (req, res) => {
   res.send('Hello, boilerplate!')
 });
-
-function validateBearerToken(req, res, next) {
-  const apiToken = process.env.API_TOKEN
-  const authToken = req.get('Authorization')
-  
-  if (!authToken || authToken.split(' ')[1] !== apiToken) {
-      logger.error(`Unauthorized request to path: ${req.path}`)
-      return res.status(401).json({ error: 'Unauthorized request' })
-  }
-  // move to the next middleware
-  next()
-}
 
 app.use(function errorHandler(error, req, res, next) {
   let response;
