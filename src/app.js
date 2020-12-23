@@ -6,7 +6,7 @@ const helmet = require('helmet');
 const { NODE_ENV } = require('./config');
 const validateBearerToken = require('./validate-bearer-token');
 const errorHandler = require('./error-handler');
-// const someRouter = require('./some-routers/some-router');
+const quotesRouter = require('./favorite_quotes/favorite_quotes-router')
 
 const morganOption = NODE_ENV === 'production' ? 'tiny' : 'common';
 
@@ -16,21 +16,12 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-// app.use('/anendpoint', someRouter);
+app.use('/api/quotes', quotesRouter);
 
 app.get('/', (req, res) => {
   res.send('Hello, boilerplate!')
 });
 
-app.use(function errorHandler(error, req, res, next) {
-  let response;
-  if (NODE_ENV === 'production') {
-    response = { error: { message: 'server error' } };
-  } else {
-    console.error(error);
-    response = { message: error.message, error };
-  }
-  res.status(500).json(response);
-});
+app.use(errorHandler);
 
 module.exports = app;

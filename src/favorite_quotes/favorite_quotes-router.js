@@ -4,13 +4,14 @@ const path = require('path');
 const xss = require('xss');
 
 const quotesRouter = express.Router();
+const bodyParser = express.json();
 
 const sanitizeQuote = quote => ({
     id: quote.id,
     content: xss(quote.content),
     attribution: xss(quote.attribution),
     source: xss(quote.source),
-    tags: xss(tags)
+    tags: xss(quote.tags)
 })
 
 quotesRouter
@@ -105,7 +106,7 @@ quotesRouter
     .catch(next)        
 })
   .delete((req, res, next) => {
-    FavoriteQuotesServices.deleteArticle(
+    FavoriteQuotesServices.deleteQuote(
       req.app.get('db'),
       req.params.quote_id
     )

@@ -3,5 +3,5 @@ CREATE TABLE favorite_quotes (
     content TEXT NOT NULL,
     attribution TEXT,
     source TEXT,
-    tags TEXT
+    tags TEXT[]
 );
