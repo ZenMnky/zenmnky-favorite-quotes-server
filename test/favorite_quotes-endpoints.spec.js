@@ -2,7 +2,7 @@ const { expect } = require('chai');
 const knex = require('knex');
 const supertest = require('supertest');
 const app = require('../src/app');
-const { makeQuotesArray, makeMaliciousQuote } = require('./quotes.fixtures');
+const { makeQuotesArray, makeMaliciousQuote, makeExpectedQuotes } = require('./quotes.fixtures');
 
 describe('Quotes endpoints', () => {
   let db;
@@ -21,7 +21,7 @@ describe('Quotes endpoints', () => {
 
   afterEach('cleanup', () => db('favorite_quotes').truncate());
 
-  describe.only('GET /api/quotes', () => {
+  describe('GET /api/quotes', () => {
     context(`Given no quotes`, () => {
       it(`responds with 200 and an empty list`, () => {
         return supertest(app)
@@ -30,9 +30,10 @@ describe('Quotes endpoints', () => {
       });
     });
 
-    context('Given there are quotes in the database', () => {
+    context.only('Given there are quotes in the database', () => {
       const testQuotes = makeQuotesArray();
-
+      const expectedQuotes = makeExpectedQuotes(testQuotes);
+          
       beforeEach('insert quotes', () => {
         return db
           .into('favorite_quotes')
@@ -40,9 +41,10 @@ describe('Quotes endpoints', () => {
       });
 
       it('GET /api/quotes responds with 200 and all quotes', () => {
+
         return supertest(app)
           .get('/api/quotes')
-          .expect(200, testQuotes);
+          .expect(200, expectedQuotes);
       });
     });
 

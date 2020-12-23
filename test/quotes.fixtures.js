@@ -19,10 +19,21 @@ const makeQuotesArray = (num = 4) => {
   return quoteArray
   
 }
-console.log(makeQuotesArray(1))
+// create expectedQuotes array
+    // the testQuotes array of objects, 
+    // in which each object has the tags value converted to a string
+    // because the database returns arrays as a string
+    
+const makeExpectedQuotes = (testQuotes) => {
+    const expectedQuotes = testQuotes.map(quoteObject => {
+      let tagsAsString = quoteObject.tags.toString()
+      quoteObject.tags = tagsAsString
+      return quoteObject
+    })  
+}
 
 const makeMaliciousQuote = () => {
   // code here
 }
 
-module.exports = {makeQuotesArray, makeMaliciousQuote};
+module.exports = {makeQuotesArray, makeMaliciousQuote, makeExpectedQuotes};
